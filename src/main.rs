@@ -1,6 +1,9 @@
-use std::{io::Write, net::TcpStream};
+use std::{
+    io::{Read, Write},
+    net::TcpStream,
+};
 
-use messages::startup::StartupMessage;
+use messages::{authentication::Authentication, startup::StartupMessage};
 use types::Connection;
 
 mod messages;
@@ -16,12 +19,16 @@ fn main() -> std::io::Result<()> {
     };
     println!("Connection: {:?}", connection);
     println!("Startup message:  {:?}", startup_message);
-    println!("Bytes startup: {:?}", startup_message.to_bytes());
 
     let mut stream = TcpStream::connect("127.0.0.1:5432")?;
-    let result = stream.write(&startup_message.to_bytes());
 
-    println!("Result: {:?}", result);
+    // send startup message
+    let mut buf = [0; 1024];
+    stream.write(&startup_message.to_bytes());
+    stream.read(&mut buf);
+
+    let auth_resp = Authentication::from(buf[1..].to_vec());
+    println!("Auth resp: {:?}", auth_resp);
 
     Ok(())
 }

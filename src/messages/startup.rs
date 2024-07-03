@@ -12,7 +12,7 @@ pub struct StartupMessage {
 
 impl StartupMessage {
     pub fn to_bytes(&self) -> Vec<u8> {
-        let mut buf: Vec<u8> = Vec::with_capacity(120);
+        let mut buf: Vec<u8> = Vec::with_capacity(40);
 
         // reserve space for prefix
         let offset = buf.len();
@@ -23,16 +23,9 @@ impl StartupMessage {
             protocol_version_to_i32(self.protocol_major_version, self.protocol_minor_version);
         buf.extend(protocol_version.to_be_bytes());
 
-        // add username
-        buf.extend("user".as_bytes());
-        buf.push(0);
-        buf.extend(self.user.as_bytes());
-        buf.push(0);
-
-        // add database
-        buf.extend("database".as_bytes());
-        buf.push(0);
-        buf.extend(self.database.as_bytes());
+        // add username and database
+        write_parameter(&mut buf, "user", &self.user);
+        write_parameter(&mut buf, "database", &self.database);
         buf.push(0);
 
         // calculate the written size and wrote it in the protocol
@@ -50,6 +43,13 @@ fn protocol_version_to_i32(major: i16, minor: i16) -> i32 {
     let combined = ((major_bits as u32) << 16) | (minor_bits as u32);
 
     combined as i32
+}
+
+fn write_parameter(buf: &mut Vec<u8>, name: &str, value: &str) {
+    buf.extend(name.as_bytes());
+    buf.push(0);
+    buf.extend(value.as_bytes());
+    buf.push(0);
 }
 
 #[cfg(test)]
