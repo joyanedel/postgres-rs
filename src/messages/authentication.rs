@@ -1,7 +1,6 @@
 use core::panic;
-use std::str::Bytes;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Authentication {
     Ok,
     KerberosV5,
